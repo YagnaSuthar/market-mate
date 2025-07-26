@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ username, email, password: hashedPassword, role });
     await user.save();
-    req.session.userId = user._id;
+    req.session.user = { _id: user._id, username: user.username, email: user.email, role: user.role };
     const userObj = user.toObject();
     delete userObj.password;
     res.status(201).json({ message: 'User registered successfully.', user: userObj });
@@ -39,7 +39,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
-    req.session.userId = user._id;
+    req.session.user = { _id: user._id, username: user.username, email: user.email, role: user.role };
     const userObj = user.toObject();
     delete userObj.password;
     res.json({ message: 'Login successful.', user: userObj });

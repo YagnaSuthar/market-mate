@@ -32,7 +32,9 @@ const SupplierProductCatalog = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/supplier/products');
+      const res = await fetch('/api/supplier/products', {
+        credentials: 'include',
+      });
       const rawText = await res.text();
       let data;
       try {
@@ -52,13 +54,16 @@ const SupplierProductCatalog = () => {
   };
 
   const fetchCategories = async () => {
-    try {
-      const res = await fetch('/api/supplier/categories');
-      const data = await res.json();
-      if (data.success) setCategories(data.data);
-    } catch (err) {
-      // ignore for now
-    }
+    // Use static categories instead of fetching from backend
+    const staticCategories = [
+      { _id: '1', name: 'Electronics' },
+      { _id: '2', name: 'Clothing' },
+      { _id: '3', name: 'Home & Kitchen' },
+      { _id: '4', name: 'Books' },
+      { _id: '5', name: 'Sports' },
+      { _id: '6', name: 'Toys' },
+    ];
+    setCategories(staticCategories);
   };
 
   useEffect(() => {
@@ -79,6 +84,7 @@ const SupplierProductCatalog = () => {
       const res = await fetch('/api/supplier/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...newProduct,
           price: Number(newProduct.price),
@@ -124,6 +130,7 @@ const SupplierProductCatalog = () => {
       const res = await fetch(`/api/supplier/products/${editId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...editProduct,
           price: Number(editProduct.price),
@@ -146,7 +153,7 @@ const SupplierProductCatalog = () => {
     setDeleteLoading(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/supplier/products/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/supplier/products/${id}`, { method: 'DELETE', credentials: 'include' });
       const data = await res.json();
       if (!data.success) throw new Error(data.message || 'Failed to delete product');
       setDeleteId(null);
@@ -217,18 +224,20 @@ const SupplierProductCatalog = () => {
           <div className="catalog-modal-content" onClick={e => e.stopPropagation()}>
             <h2>Add New Product</h2>
             <form className="catalog-form" onSubmit={handleAddProduct}>
-              <label>
+              <label htmlFor="name">
                 Name*
                 <input
+                  id="name"
                   type="text"
                   value={newProduct.name}
                   onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
                   required
                 />
               </label>
-              <label>
+              <label htmlFor="category">
                 Category*
                 <select
+                  id="category"
                   value={newProduct.category}
                   onChange={e => setNewProduct({ ...newProduct, category: e.target.value })}
                   required
@@ -239,9 +248,10 @@ const SupplierProductCatalog = () => {
                   ))}
                 </select>
               </label>
-              <label>
+              <label htmlFor="price">
                 Price*
                 <input
+                  id="price"
                   type="number"
                   min="0"
                   value={newProduct.price}
@@ -249,18 +259,20 @@ const SupplierProductCatalog = () => {
                   required
                 />
               </label>
-              <label>
+              <label htmlFor="unit">
                 Unit*
                 <input
+                  id="unit"
                   type="text"
                   value={newProduct.unit}
                   onChange={e => setNewProduct({ ...newProduct, unit: e.target.value })}
                   required
                 />
               </label>
-              <label>
+              <label htmlFor="quantity">
                 Quantity*
                 <input
+                  id="quantity"
                   type="number"
                   min="0"
                   value={newProduct.quantity}
@@ -268,9 +280,10 @@ const SupplierProductCatalog = () => {
                   required
                 />
               </label>
-              <label>
+              <label htmlFor="description">
                 Description
                 <textarea
+                  id="description"
                   value={newProduct.description}
                   onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
                 />

@@ -16,11 +16,23 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Logging middleware to debug cookies and session
+app.use((req, res, next) => {
+  console.log('Cookies:', req.headers.cookie);
+  console.log('Session:', req.session);
+  next();
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'yourSecret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // set to true if using HTTPS
+  cookie: {
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // New Auth Routes

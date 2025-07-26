@@ -1,12 +1,24 @@
 const Product = require('../models/Product');
 const mongoose = require('mongoose');
+const Category = require('../models/Category');
 
 module.exports = {
   // Product Management
   getAllProducts: async (req, res) => {
     try {
       // Filtering, sorting, and pagination can be added here
-      const products = await Product.find();
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+      const user = req.session.user;
+      let products;
+      if (user.role === 'supplier') {
+        // Supplier can see only their own products
+        products = await Product.find({ supplierId: user._id });
+      } else {
+        // Other users (e.g., vendor) see all products
+        products = await Product.find({});
+      }
       res.status(200).json({ success: true, data: products });
     } catch (error) {
       res.status(500).json({ success: false, message: 'Server Error', error: error.message });
@@ -29,7 +41,15 @@ module.exports = {
   },
   createProduct: async (req, res) => {
     try {
-      const product = new Product(req.body);
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+      const { name, category, price, unit, quantity } = req.body;
+      if (!name || !category || price === undefined || !unit || quantity === undefined) {
+        return res.status(400).json({ success: false, message: 'Missing required fields' });
+      }
+      const productData = { ...req.body, supplierId: req.session.user._id };
+      const product = new Product(productData);
       await product.save();
       res.status(201).json({ success: true, data: product });
     } catch (error) {
@@ -67,6 +87,16 @@ module.exports = {
     }
   },
   updateProductStatus: (req, res) => {},
+
+  // New method to get categories
+  getCategories: async (req, res) => {
+    try {
+      const categories = await Category.find({});
+      res.status(200).json({ success: true, data: categories });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Failed to fetch categories', error: error.message });
+    }
+  },
 
   // Bulk Operations
   bulkImportProducts: (req, res) => {},
