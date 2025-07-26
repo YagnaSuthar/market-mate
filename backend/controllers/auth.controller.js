@@ -2,13 +2,16 @@ const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 
 exports.signup = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, profile } = req.body;
   try {
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ msg: 'User already exists' });
     }
     user = new User({ name, email, password, role });
+    if (role === 'supplier' && profile) {
+      user.profile = profile;
+    }
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
     await user.save();

@@ -11,17 +11,32 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('vendor');
   const [error, setError] = useState('');
+  const [company, setCompany] = useState('');
+  const [phone, setPhone] = useState('');
+  const [street, setStreet] = useState('');
+  const [city, setCity] = useState('');
+  const [stateVal, setStateVal] = useState('');
+  const [zip, setZip] = useState('');
+  const [country, setCountry] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
+      let body = { name, email, password, role };
+      if (role === 'supplier') {
+        body.profile = {
+          company,
+          phone,
+          address: { street, city, state: stateVal, zip, country },
+        };
+      }
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, email, password, role })
+        body: JSON.stringify(body)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || 'Registration failed');
@@ -79,6 +94,66 @@ const Register = () => {
           <option value="vendor">Vendor</option>
           <option value="supplier">Supplier</option>
         </select>
+        {role === 'supplier' && (
+          <>
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="Company Name"
+              value={company}
+              onChange={e => setCompany(e.target.value)}
+              required
+            />
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="Phone"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              required
+            />
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="Street Address"
+              value={street}
+              onChange={e => setStreet(e.target.value)}
+              required
+            />
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="City"
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              required
+            />
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="State"
+              value={stateVal}
+              onChange={e => setStateVal(e.target.value)}
+              required
+            />
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="Zip Code"
+              value={zip}
+              onChange={e => setZip(e.target.value)}
+              required
+            />
+            <input
+              className={styles.register__input}
+              type="text"
+              placeholder="Country"
+              value={country}
+              onChange={e => setCountry(e.target.value)}
+              required
+            />
+          </>
+        )}
         <button className={styles.register__button} type="submit">Register</button>
         <div className={styles.register__footer}>
           <span>Already have an account?</span>

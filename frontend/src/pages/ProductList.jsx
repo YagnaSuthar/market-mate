@@ -14,6 +14,7 @@ const ProductList = () => {
   const [selectedRating, setSelectedRating] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -76,6 +77,10 @@ const ProductList = () => {
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -400,8 +405,14 @@ const ProductList = () => {
               </button>
             </div>
           ) : (
-            filteredProducts.map(product => (
-              <div key={product.id} className="product-card-productlist">
+            filteredProducts.map((product, idx) => (
+              <div
+                key={product.id}
+                className={`product-card-productlist${mounted ? ' animate-product-card' : ''}`}
+                style={{
+                  animationDelay: mounted ? `${idx * 100}ms` : '0ms',
+                }}
+              >
                 <div className="product-image-container-productlist">
                   <img
                     src={product.image}

@@ -6,8 +6,9 @@ import Footer from './Dashboard/Footer';
 import DashboardOverview from './Dashboard/DashboardOverview';
 import styles from '../styles/VendorDashboard.module.css';
 import ProductList from './ProductList';
+import SearchSuppliers from './Dashboard/SearchSuppliers';
+import OrderManagement from './Dashboard/OrderManagement';
 
-const Suppliers = () => <div>Search Suppliers</div>;
 const Orders = () => <div>Order Management</div>;
 const Analytics = () => <div>Analytics</div>;
 const Chat = () => <div>Communication Hub</div>;
@@ -24,8 +25,8 @@ const VendorDashboard = () => {
             <Route path="/" element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardOverview />} />
             <Route path="products" element={<ProductList />} />
-            <Route path="suppliers" element={<Suppliers />} />
-            <Route path="orders" element={<Orders />} />
+            <Route path="suppliers" element={<SearchSuppliers />} />
+            <Route path="orders" element={<OrderManagement />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="chat" element={<Chat />} />
             <Route path="notifications" element={<Notifications />} />
