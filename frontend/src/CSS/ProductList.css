@@ -12,8 +12,8 @@
 
 /* Container */
 .container-productlist {
-  max-width: 1400px;
-  margin: 0 auto;
+  margin-left: 300px;
+  max-width: 1600px;
   padding: 2rem;
 }
 
@@ -45,9 +45,9 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  opacity: 0.15;
-  filter: blur(1px);
+  background: linear-gradient(135deg, #fff 0%, #e5e7eb 100%);
+  opacity: 0.35;
+  filter: blur(2px);
 }
 
 .orb-1-productlist {
@@ -81,7 +81,7 @@
   border-radius: 1rem;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.07), 0 1.5px 6px rgba(0,0,0,0.06);
   border: 1px solid #e2e8f0;
   position: relative;
   z-index: 10;
@@ -314,7 +314,7 @@
 .products-container-productlist.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .products-container-productlist.list {
@@ -355,19 +355,18 @@
 
 /* Product Cards */
 .product-card-productlist {
-  background: white;
-  border-radius: 1rem;
+  background: linear-gradient(135deg, #fff 80%, #f1f5f9 100%);
+  border-radius: 1.25rem;
   border: 1px solid #e2e8f0;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s, transform 0.2s;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08), 0 1.5px 6px rgba(0,0,0,0.07);
 }
-
 .product-card-productlist:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  border-color: #cbd5e1;
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.13), 0 4px 16px rgba(0,0,0,0.10);
+  border-color: #3b82f6;
 }
 
 .products-container-productlist.list .product-card-productlist {
@@ -688,15 +687,15 @@
 }
 
 .btn-primary-productlist {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border: 1px solid transparent;
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.10);
 }
 
 .btn-primary-productlist:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18);
 }
 
 .btn-productlist .icon {
@@ -857,3 +856,65 @@
     color: #000;
   }
 }
+
+/* --- Add spacing for sidebar on desktop --- */
+@media (min-width: 1024px) {
+  .container-productlist {
+    /* margin-left: 30px; Adjust this value to match your sidebar width */
+    transition: margin-left 0.3s;
+  }
+}
+
+/* --- Enhance card appearance --- */
+.product-card-productlist {
+  background: linear-gradient(135deg, #fff 80%, #f1f5f9 100%);
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: box-shadow 0.3s, transform 0.2s;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08), 0 1.5px 6px rgba(0,0,0,0.07);
+}
+.product-card-productlist:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.13), 0 4px 16px rgba(0,0,0,0.10);
+  border-color: #3b82f6;
+}
+
+/* --- Add more vibrant button and badge styles --- */
+.btn-primary-productlist {
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.10);
+}
+.btn-primary-productlist:hover {
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18);
+}
+
+/* --- Add subtle shadow to header for separation --- */
+.header-productlist {
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.07), 0 1.5px 6px rgba(0,0,0,0.06);
+}
+
+/* --- Add more gap between cards and container --- */
+.products-container-productlist.grid {
+  gap: 2rem;
+}
+
+/* --- Responsive: remove left margin on mobile/tablet --- */
+@media (max-width: 1023px) {
+  .container-productlist {
+    margin-left: 0;
+  }
+}
+
+/* --- Add a soft border and shadow to the sidebar (if you want, add this to your sidebar CSS) --- */
+/*
+.sidebar {
+  background: #fff;
+  border-right: 1.5px solid #e2e8f0;
+  box-shadow: 2px 0 12px rgba(59, 130, 246, 0.04);
+}
+*/
