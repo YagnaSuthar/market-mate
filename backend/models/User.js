@@ -70,7 +70,23 @@ const UserSchema = new mongoose.Schema({
   lastLogin: Date,
   isActive: { type: Boolean, default: true },
   // Supplier-specific fields
-  ...SupplierFields
+  ...SupplierFields,
+  // Supplier analytics fields for dashboard
+  businessMetrics: {
+    totalRevenue: { type: Number, default: 0 },
+    totalOrders: { type: Number, default: 0 },
+    avgOrderValue: { type: Number, default: 0 },
+    revenueByCategory: { type: Map, of: Number, default: {} },
+    revenueByRegion: { type: Map, of: Number, default: {} },
+    revenueByCustomerSegment: { type: Map, of: Number, default: {} },
+    lastUpdated: { type: Date, default: Date.now }
+  },
+  notifications: [{
+    type: { type: String },
+    message: { type: String },
+    read: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+  }],
 });
 
 UserSchema.index({ trustScore: 1 });

@@ -64,6 +64,18 @@ const OrderSchema = new mongoose.Schema({
     processingTime: Number, // in minutes
     deliveryTime: Number, // in minutes
     lastStatusChange: Date
+  },
+  // Supplier analytics fields for dashboard
+  analytics: {
+    fulfillmentRate: { type: Number, default: 0 },
+    orderValueHistory: [{
+      date: Date,
+      value: Number
+    }],
+    segmentation: {
+      region: String,
+      vendorType: String
+    }
   }
 });
 

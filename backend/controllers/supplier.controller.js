@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const Order = require('../models/order.model');
+const Product = require('../models/products.model');
 
 // GET /api/vendor/suppliers - Advanced search & filter
 exports.searchSuppliers = async (req, res) => {
@@ -119,5 +121,176 @@ exports.compareSuppliers = async (req, res) => {
     res.json({ suppliers });
   } catch (err) {
     res.status(500).json({ error: 'Failed to compare suppliers', details: err.message });
+  }
+};
+
+// GET /api/supplier/dashboard/overview
+exports.getSupplierDashboard = async (req, res) => {
+  try {
+    const supplierId = req.user?._id || req.query.supplierId; // fallback for testing
+    if (!supplierId) return res.status(400).json({ error: 'Supplier ID required' });
+
+    // Revenue metrics
+    const revenueAgg = await Order.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId), status: { $in: ['Completed', 'Delivered'] } } },
+      { $group: {
+        _id: null,
+        totalRevenue: { $sum: '$total' },
+        totalOrders: { $sum: 1 },
+        avgOrderValue: { $avg: '$total' }
+      } }
+    ]);
+    const revenue = revenueAgg[0] || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 };
+
+    // Order analytics
+    const orderStats = await Order.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId) } },
+      { $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      } }
+    ]);
+    const orderStatus = orderStats.reduce((acc, cur) => { acc[cur._id] = cur.count; return acc; }, {});
+    const pendingOrders = orderStatus['Pending'] || 0;
+    const completedOrders = orderStatus['Completed'] || 0;
+    const shippedOrders = orderStatus['Shipped'] || 0;
+    const deliveredOrders = orderStatus['Delivered'] || 0;
+
+    // Top products
+    const topProducts = await Product.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId) } },
+      { $project: { name: 1, images: 1, 'salesAnalytics.totalSold': 1, 'salesAnalytics.revenueContribution': 1 } },
+      { $sort: { 'salesAnalytics.totalSold': -1 } },
+      { $limit: 5 }
+    ]);
+
+    // Performance KPIs (from User)
+    const supplier = await User.findById(supplierId).select('performance trustScore businessMetrics reviews');
+    const satisfactionScore = supplier?.reviews?.length
+      ? supplier.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / supplier.reviews.length
+      : 0;
+
+    // Vendor analytics (customer insights)
+    const vendorAgg = await Order.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId) } },
+      { $group: { _id: '$vendorId', orderCount: { $sum: 1 }, totalSpent: { $sum: '$total' } } },
+      { $sort: { orderCount: -1 } }
+    ]);
+    const newVendors = vendorAgg.length;
+    const repeatVendors = vendorAgg.filter(v => v.orderCount > 1).length;
+
+    // Market trends (category demand)
+    const categoryTrends = await Product.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId) } },
+      { $group: { _id: '$category', totalSold: { $sum: '$salesAnalytics.totalSold' } } },
+      { $sort: { totalSold: -1 } }
+    ]);
+
+    res.json({
+      revenue,
+      orderStatus: { pendingOrders, completedOrders, shippedOrders, deliveredOrders },
+      topProducts,
+      performance: {
+        satisfactionScore,
+        trustScore: supplier?.trustScore || 0,
+        deliverySuccess: supplier?.performance?.deliverySuccess || 0,
+        responseTime: supplier?.performance?.responseTime || 0,
+        orderCompletion: supplier?.performance?.orderCompletion || 0
+      },
+      vendorAnalytics: {
+        newVendors,
+        repeatVendors,
+        vendorLifetimeValue: vendorAgg.reduce((sum, v) => sum + v.totalSpent, 0) / (vendorAgg.length || 1)
+      },
+      categoryTrends
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch supplier dashboard', details: err.message });
+  }
+};
+
+// GET /api/supplier/dashboard/revenue
+exports.getSupplierRevenue = async (req, res) => {
+  try {
+    const supplierId = req.user?._id || req.query.supplierId;
+    const { range = 'monthly' } = req.query;
+    if (!supplierId) return res.status(400).json({ error: 'Supplier ID required' });
+    let groupBy, dateFrom;
+    const now = new Date();
+    if (range === 'daily') {
+      groupBy = { year: { $year: '$createdAt' }, month: { $month: '$createdAt' }, day: { $dayOfMonth: '$createdAt' } };
+      dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    } else if (range === 'weekly') {
+      groupBy = { year: { $year: '$createdAt' }, week: { $week: '$createdAt' } };
+      dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+    } else {
+      groupBy = { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } };
+      dateFrom = new Date(now.getFullYear(), now.getMonth() - 12, 1);
+    }
+    const revenueData = await Order.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId), status: { $in: ['Completed', 'Delivered'] }, createdAt: { $gte: dateFrom } } },
+      { $group: { _id: groupBy, total: { $sum: '$total' } } },
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.week': 1 } }
+    ]);
+    res.json({ revenueData });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch revenue analytics', details: err.message });
+  }
+};
+
+// GET /api/supplier/dashboard/orders
+exports.getSupplierOrders = async (req, res) => {
+  try {
+    const supplierId = req.user?._id || req.query.supplierId;
+    if (!supplierId) return res.status(400).json({ error: 'Supplier ID required' });
+    const orders = await Order.find({ supplierId }).sort({ createdAt: -1 }).limit(100);
+    res.json({ orders });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch orders', details: err.message });
+  }
+};
+
+// GET /api/supplier/dashboard/products
+exports.getSupplierProducts = async (req, res) => {
+  try {
+    const supplierId = req.user?._id || req.query.supplierId;
+    if (!supplierId) return res.status(400).json({ error: 'Supplier ID required' });
+    const products = await Product.find({ supplierId });
+    res.json({ products });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch products', details: err.message });
+  }
+};
+
+// GET /api/supplier/dashboard/customers
+exports.getSupplierCustomers = async (req, res) => {
+  try {
+    const supplierId = req.user?._id || req.query.supplierId;
+    if (!supplierId) return res.status(400).json({ error: 'Supplier ID required' });
+    const vendorAgg = await Order.aggregate([
+      { $match: { supplierId: mongoose.Types.ObjectId(supplierId) } },
+      { $group: { _id: '$vendorId', orderCount: { $sum: 1 }, totalSpent: { $sum: '$total' } } },
+      { $sort: { orderCount: -1 } }
+    ]);
+    res.json({ vendors: vendorAgg });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch customer analytics', details: err.message });
+  }
+};
+
+// GET /api/supplier/dashboard/performance
+exports.getSupplierPerformance = async (req, res) => {
+  try {
+    const supplierId = req.user?._id || req.query.supplierId;
+    if (!supplierId) return res.status(400).json({ error: 'Supplier ID required' });
+    const supplier = await User.findById(supplierId).select('performance trustScore businessMetrics reviews');
+    res.json({
+      performance: supplier?.performance,
+      trustScore: supplier?.trustScore,
+      businessMetrics: supplier?.businessMetrics,
+      reviews: supplier?.reviews
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch performance analytics', details: err.message });
   }
 }; 
