@@ -33,7 +33,15 @@ const SupplierProductCatalog = () => {
     setError(null);
     try {
       const res = await fetch('/api/supplier/products');
-      const data = await res.json();
+      const rawText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (jsonErr) {
+        setError(`Invalid JSON response: ${rawText.substring(0, 200)}`);
+        setLoading(false);
+        return;
+      }
       if (!data.success) throw new Error(data.message || 'Failed to fetch products');
       setProducts(data.data);
     } catch (err) {

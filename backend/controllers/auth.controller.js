@@ -1,86 +1,60 @@
-const User = require('../models/user.model');
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
-exports.signup = async (req, res) => {
-  const { name, email, password, role, profile } = req.body;
+// Register a new user
+exports.register = async (req, res) => {
+  const { username, email, password, role } = req.body;
+  if (!username || !email || !password || !role) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
   try {
-    let user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ msg: 'User already exists' });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists.' });
     }
-    user = new User({ name, email, password, role });
-    if (role === 'supplier' && profile) {
-      user.profile = profile;
-    }
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashedPassword, role });
     await user.save();
-    const { password: _, ...userInfo } = user.toObject();
-    req.session.user = userInfo;
-    res.json({ user: userInfo });
+    req.session.userId = user._id;
+    const userObj = user.toObject();
+    delete userObj.password;
+    res.status(201).json({ message: 'User registered successfully.', user: userObj });
   } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({ message: 'Server error.' });
   }
 };
 
+// Login user
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).json({ msg: 'Please provide email and password' });
+    return res.status(400).json({ message: 'All fields are required.' });
   }
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ msg: 'Invalid Credentials' });
+      return res.status(400).json({ message: 'Invalid credentials.' });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid Credentials' });
+      return res.status(400).json({ message: 'Invalid credentials.' });
     }
-    user.lastLogin = new Date();
-    await user.save();
-    const { password: _, ...userInfo } = user.toObject();
-    req.session.user = userInfo;
-    res.json({ user: userInfo });
+    req.session.userId = user._id;
+    const userObj = user.toObject();
+    delete userObj.password;
+    res.json({ message: 'Login successful.', user: userObj });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({ message: 'Server error.' });
   }
 };
 
+// Logout user
 exports.logout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ msg: 'Logout failed' });
+      return res.status(500).json({ message: 'Logout failed.' });
     }
     res.clearCookie('connect.sid');
-    res.json({ msg: 'Logged out successfully' });
+    res.json({ message: 'Logged out successfully.' });
   });
-};
-
-exports.getProfile = async (req, res) => {
-  try {
-    const userId = req.session.user?._id;
-    if (!userId) return res.status(401).json({ msg: 'Not authenticated' });
-    const user = await User.findById(userId).select('-password');
-    if (!user) return res.status(404).json({ msg: 'User not found' });
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
-  }
-};
-
-exports.updateProfile = async (req, res) => {
-  try {
-    const userId = req.session.user?._id;
-    if (!userId) return res.status(401).json({ msg: 'Not authenticated' });
-    const updates = req.body;
-    if (updates.password) delete updates.password; // Don't allow password change here
-    const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
-    if (!user) return res.status(404).json({ msg: 'User not found' });
-    req.session.user = user;
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
-  }
 }; 

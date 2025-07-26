@@ -6,7 +6,7 @@ import Header from './Navbar.jsx';
 
 const Register = () => {
   const { login } = useContext(AuthContext);
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('vendor');
@@ -24,7 +24,7 @@ const Register = () => {
     e.preventDefault();
     setError('');
     try {
-      let body = { name, email, password, role };
+      let body = { username, email, password, role };
       if (role === 'supplier') {
         body.profile = {
           company,
@@ -65,9 +65,9 @@ const Register = () => {
         <input
           className={styles.register__input}
           type="text"
-          placeholder="Name"
-          value={name}
-          onChange={e => setName(e.target.value)}
+          placeholder="Username"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
           required
         />
         <input
@@ -164,4 +164,4 @@ const Register = () => {
   );
 };
 
-export default Register; 
+export default Register;

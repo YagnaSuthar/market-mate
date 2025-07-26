@@ -32,18 +32,18 @@ function Signup() {
       payload.companyName = form.companyName;
     }
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || 'Signup failed');
+      if (!res.ok) throw new Error('registerfail');
       localStorage.setItem('user', JSON.stringify(data.user));
       setAuth({ user: data.user });
       navigate(role === 'vendor' ? '/vendor' : '/supplier');
     } catch (err) {
-      setError(err.message);
+      setError(err.message === 'registerfail' ? 'Registration failed. Please try again.' : err.message);
     }
   };
 

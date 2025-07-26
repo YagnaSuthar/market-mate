@@ -3,7 +3,16 @@ const router = express.Router();
 const productController = require('../controllers/product.controller');
 
 // Product Management
-router.get('/products', productController.getAllProducts);
+router.get('/products', async (req, res, next) => {
+  console.log('GET /api/supplier/products called');
+  try {
+    const products = await require('../models/Product').find();
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    console.error('Error in /api/supplier/products:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+});
 router.get('/products/:id', productController.getProductById);
 router.post('/products', productController.createProduct);
 router.put('/products/:id', productController.updateProduct);

@@ -1,11 +1,8 @@
-const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-dotenv.config();
-
-// Supplier authentication middleware
-const authenticateSupplier = (req, res, next) => {
-  // TODO: Implement authentication logic
+function requireLogin(req, res, next) {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ message: 'Not authenticated.' });
+  }
   next();
-};
+}
 
-module.exports = { authenticateSupplier }; 
+module.exports = { requireLogin }; 
