@@ -1,27 +1,49 @@
 const mongoose = require('mongoose');
-const User = require('../models/User');
-const db = require('../config/db');
+const Supplier = require('../models/supplier');
+const connectDB = require('../config/db');
 
-// No dummy suppliers. Add real supplier data here if needed.
-const suppliers = [
-  // Add real supplier objects here
+const sampleSuppliers = [
+  {
+    username: 'supplier1',
+    email: 'supplier1@example.com',
+    password: 'password123',
+    company: 'Supplier One Inc.',
+    phone: '123-456-7890',
+    address: {
+      street: '123 Main St',
+      city: 'Cityville',
+      state: 'Stateville',
+      zip: '12345',
+      country: 'Countryland'
+    }
+  },
+  {
+    username: 'supplier2',
+    email: 'supplier2@example.com',
+    password: 'password123',
+    company: 'Supplier Two LLC',
+    phone: '987-654-3210',
+    address: {
+      street: '456 Side St',
+      city: 'Townsville',
+      state: 'Regionland',
+      zip: '67890',
+      country: 'Countryland'
+    }
+  }
 ];
 
-async function seed() {
+async function seedSuppliers() {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/market-mate');
-    await User.deleteMany({ role: 'supplier' });
-    if (suppliers.length > 0) {
-      await User.insertMany(suppliers);
-      console.log('Suppliers seeded!');
-    } else {
-      console.log('No suppliers to seed.');
-    }
-    process.exit();
+    await connectDB();
+    await Supplier.deleteMany({});
+    await Supplier.insertMany(sampleSuppliers);
+    console.log('Sample suppliers seeded successfully');
+    process.exit(0);
   } catch (err) {
-    console.error(err);
+    console.error('Error seeding suppliers:', err);
     process.exit(1);
   }
 }
 
-seed(); 
+seedSuppliers();
